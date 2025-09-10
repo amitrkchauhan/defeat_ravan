@@ -25,18 +25,19 @@ for (let i = 1; i <= 10; i++) {
 
 let grid = [];
 let cellSize, offsetX, offsetY;
+let introPhase = true; // 🔴 intro phase at start
 
 function setupGrid() {
   const shuffled = [...devilData].sort(() => Math.random() - 0.5);
-  const chosenDevils = shuffled.slice(0, 5);
+  const chosenDevils = shuffled.slice(0, 10); // place 10 devils
 
   grid = [];
   for (let r = 0; r < GRID_ROWS; r++) {
     const row = [];
     for (let c = 0; c < GRID_COLS; c++) {
       row.push({
-        devil: null,     // {devilImg, offerImg, offerLink}
-        state: "closed", // closed | opening | open | blasting | offer
+        devil: null,
+        state: "closed", // closed | opening | open | blasting | removed
         frame: 0,
         blastFrame: 0,
       });
@@ -86,19 +87,31 @@ function drawGrid() {
       const x = offsetX + c * (cellSize + SPACING);
       const y = offsetY + r * (cellSize + SPACING);
 
-      if (cell.state === "closed") {
-        ctx.drawImage(windowFrames[0], x, y, cellSize, cellSize);
-      } else if (cell.state === "opening") {
-        ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
-      } else if (cell.state === "open") {
-        ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
-        if (cell.devil) {
+      if (cell.state === "removed") continue; // removed cell not drawn
+
+      if (introPhase) {
+        // During intro → show window open with devil inside
+        if (windowFrames[2].complete) ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+        if (cell.devil && cell.devil.devilImg.complete) {
           ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
         }
-      } else if (cell.state === "blasting") {
-        ctx.drawImage(blastFrames[cell.blastFrame], x, y, cellSize, cellSize);
-      } else if (cell.state === "offer") {
-        ctx.drawImage(cell.devil.offerImg, x, y, cellSize, cellSize);
+      } else {
+        if (cell.state === "closed") {
+          if (windowFrames[0].complete) ctx.drawImage(windowFrames[0], x, y, cellSize, cellSize);
+        } else if (cell.state === "opening") {
+          if (windowFrames[cell.frame] && windowFrames[cell.frame].complete) {
+            ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
+          }
+        } else if (cell.state === "open") {
+          if (windowFrames[2].complete) ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+          if (cell.devil && cell.devil.devilImg.complete) {
+            ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
+          }
+        } else if (cell.state === "blasting") {
+          if (blastFrames[cell.blastFrame] && blastFrames[cell.blastFrame].complete) {
+            ctx.drawImage(blastFrames[cell.blastFrame], x, y, cellSize, cellSize);
+          }
+        }
       }
     }
   }
@@ -109,7 +122,7 @@ function drawScene() {
   drawGrid();
 }
 
-// Open → delay → blast → offer
+// Open → delay → blast → popup → remove
 function animateCell(cell) {
   if (cell.state === "closed") {
     cell.state = "opening";
@@ -131,7 +144,9 @@ function animateCell(cell) {
               cell.blastFrame++;
               if (cell.blastFrame >= blastFrames.length) {
                 clearInterval(blastInterval);
-                cell.state = "offer";
+                // show popup then remove window
+                showOfferPopup(cell.devil);
+                cell.state = "removed";
               }
             }, 300);
           }, 400);
@@ -142,6 +157,8 @@ function animateCell(cell) {
 }
 
 canvas.addEventListener("click", (e) => {
+  if (introPhase) return; // ignore clicks during intro
+
   const rect = canvas.getBoundingClientRect();
   const mouseX = e.clientX - rect.left;
   const mouseY = e.clientY - rect.top;
@@ -161,8 +178,6 @@ canvas.addEventListener("click", (e) => {
 
         if (cell.state === "closed") {
           animateCell(cell);
-        } else if (cell.state === "offer" && cell.devil) {
-          window.open(cell.devil.offerLink, "_blank");
         }
       }
     }
@@ -178,3 +193,44 @@ setupGrid();
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 gameLoop();
+
+/* ----------------------
+   Intro phase (5 sec open windows with devils)
+----------------------- */
+setTimeout(() => {
+  // after 5 sec → windows close (reverse animation)
+  introPhase = false;
+
+  grid.forEach(row => row.forEach(cell => {
+    if (cell.devil) {
+      // play closing animation backwards
+      cell.state = "opening";
+      cell.frame = windowFrames.length - 1;
+      let closeInterval = setInterval(() => {
+        cell.frame--;
+        if (cell.frame <= 0) {
+          clearInterval(closeInterval);
+          cell.state = "closed";
+        }
+      }, 300);
+    }
+  }));
+}, 5000);
+
+/* ----------------------
+   Popup handling
+----------------------- */
+const offerPopup = document.getElementById("offerPopup");
+const offerImage = document.getElementById("offerImage");
+const offerLink = document.getElementById("offerLink");
+const closeOffer = document.getElementById("closeOffer");
+
+function showOfferPopup(devil) {
+  offerImage.src = devil.offerImg.src;
+  offerLink.href = devil.offerLink;
+  offerPopup.style.display = "flex";
+}
+
+closeOffer.addEventListener("click", () => {
+  offerPopup.style.display = "none";
+});
