@@ -91,7 +91,9 @@ function drawGrid() {
 
       if (introPhase) {
         // During intro → show window open with devil inside
-        if (windowFrames[2].complete) ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+        if (windowFrames[2].complete) {
+            ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+        }
         if (cell.devil && cell.devil.devilImg.complete) {
           ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
         }
@@ -103,11 +105,16 @@ function drawGrid() {
             ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
           }
         } else if (cell.state === "open") {
-          if (windowFrames[2].complete) ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
-          if (cell.devil && cell.devil.devilImg.complete) {
-            ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
+          if (windowFrames[2].complete) {
+            ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
           }
+        //   if (cell.devil && cell.devil.devilImg.complete) {
+        //     ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
+        //   }
         } else if (cell.state === "blasting") {
+            if (windowFrames[2].complete) {
+                ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+            }
           if (blastFrames[cell.blastFrame] && blastFrames[cell.blastFrame].complete) {
             ctx.drawImage(blastFrames[cell.blastFrame], x, y, cellSize, cellSize);
           }
@@ -146,7 +153,7 @@ function animateCell(cell) {
                 clearInterval(blastInterval);
                 // show popup then remove window
                 showOfferPopup(cell.devil);
-                cell.state = "removed";
+                cell.state = "open";
               }
             }, 300);
           }, 400);
@@ -201,20 +208,20 @@ setTimeout(() => {
   // after 5 sec → windows close (reverse animation)
   introPhase = false;
 
-  grid.forEach(row => row.forEach(cell => {
-    if (cell.devil) {
-      // play closing animation backwards
-      cell.state = "opening";
-      cell.frame = windowFrames.length - 1;
-      let closeInterval = setInterval(() => {
-        cell.frame--;
-        if (cell.frame <= 0) {
-          clearInterval(closeInterval);
-          cell.state = "closed";
-        }
-      }, 300);
+grid.forEach(row => row.forEach(cell => {
+  // play closing animation backwards for ALL cells
+  cell.state = "opening";
+  cell.frame = windowFrames.length - 1;
+
+  let closeInterval = setInterval(() => {
+    cell.frame--;
+    if (cell.frame <= 0) {
+      clearInterval(closeInterval);
+      cell.state = "closed";
     }
-  }));
+  }, 300);
+}));
+
 }, 5000);
 
 /* ----------------------
