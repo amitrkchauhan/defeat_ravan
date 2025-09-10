@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Devil Hunt Game</title>
+  <style>
+    html,body { margin:0; height:100%; background:black; }
+    #gameCanvas { display:block; margin:0 auto; background:black; }
+
+    /* Offer popup styles */
+    #offerPopup {
+      position: fixed;
+      top:0; left:0; width:100%; height:100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    #offerContent {
+      position: relative;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 80%;
+    }
+    #offerContent img {
+      max-width: 100%;
+      height: auto;
+    }
+    #closeOffer {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 22px;
+      cursor: pointer;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Popup -->
+  <div id="offerPopup">
+    <div id="offerContent">
+      <span id="closeOffer">✖</span>
+      <a id="offerLink" href="#" target="_blank">
+        <img id="offerImage" src="" alt="Offer" />
+      </a>
+    </div>
+  </div>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
