@@ -1,8 +1,6 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-//This is a test
-
 const GRID_ROWS = 5;
 const GRID_COLS = 4;
 const SPACING = 3;
@@ -97,16 +95,38 @@ function drawGrid() {
             ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
         }
         if (cell.devil && cell.devil.devilImg.complete) {
-          ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
+            const scale = 0.85; // 70% of cell
+            const devilW = cellSize * scale;
+            const devilH = cellSize * scale;
+            const devilX = x + (cellSize - devilW) / 2;
+            const devilY = y + (cellSize - devilH) / 2;
+            ctx.drawImage(cell.devil.devilImg, devilX, devilY, devilW, devilH);
         }
       } else {
         if (cell.state === "closed") {
           if (windowFrames[0].complete) ctx.drawImage(windowFrames[0], x, y, cellSize, cellSize);
         } else if (cell.state === "opening") {
+            if (cell.devil && cell.devil.devilImg.complete) {
+                const scale = 0.85; // 70% of cell
+                const devilW = cellSize * scale;
+                const devilH = cellSize * scale;
+                const devilX = x + (cellSize - devilW) / 2;
+                const devilY = y + (cellSize - devilH) / 2;
+                ctx.drawImage(cell.devil.devilImg, devilX, devilY, devilW, devilH);
+            }
           if (windowFrames[cell.frame] && windowFrames[cell.frame].complete) {
             ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
           }
+
         } else if (cell.state === "open") {
+            if (cell.devil && cell.devil.devilImg.complete) {
+                const scale = 0.85; // 70% of cell
+                const devilW = cellSize * scale;
+                const devilH = cellSize * scale;
+                const devilX = x + (cellSize - devilW) / 2;
+                const devilY = y + (cellSize - devilH) / 2;
+                ctx.drawImage(cell.devil.devilImg, devilX, devilY, devilW, devilH);
+            }
           if (windowFrames[2].complete) {
             ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
           }
@@ -114,12 +134,21 @@ function drawGrid() {
         //     ctx.drawImage(cell.devil.devilImg, x, y, cellSize, cellSize);
         //   }
         } else if (cell.state === "blasting") {
+            if (blastFrames[cell.blastFrame] && blastFrames[cell.blastFrame].complete) {
+                const scale = 0.85; // 70% of cell
+                const blastW = cellSize * scale;
+                const blastH = cellSize * scale;
+                const blastX = x + (cellSize - blastW) / 2;
+                const blastY = y + (cellSize - blastH) / 2;
+                ctx.drawImage(blastFrames[cell.blastFrame], blastX, blastY, blastW, blastH);
+          }
             if (windowFrames[2].complete) {
                 ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
             }
-          if (blastFrames[cell.blastFrame] && blastFrames[cell.blastFrame].complete) {
-            ctx.drawImage(blastFrames[cell.blastFrame], x, y, cellSize, cellSize);
-          }
+        } else if (cell.state === "completed") {
+            if (windowFrames[2].complete) {
+                ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
+            }
         }
       }
     }
@@ -154,14 +183,14 @@ function animateCell(cell) {
               if (cell.blastFrame >= blastFrames.length) {
                 clearInterval(blastInterval);
                 // show popup then remove window
-                showOfferPopup(cell.devil);
-                cell.state = "open";
+                // showOfferPopup(cell.devil);
+                cell.state = "completed";
               }
-            }, 300);
-          }, 400);
+            }, 150);
+          }, 600);
         }
       }
-    }, 300);
+    }, 100);
   }
 }
 
@@ -221,7 +250,7 @@ grid.forEach(row => row.forEach(cell => {
       clearInterval(closeInterval);
       cell.state = "closed";
     }
-  }, 300);
+  }, 150);
 }));
 
 }, 5000);
