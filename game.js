@@ -192,7 +192,7 @@ function drawScene() {
         ctx.drawImage(titleImg, titleX, titleY, titleW, titleH);
       }
       drawLoadingBar();
-      loadingProgress += 0.01;
+      loadingProgress += 0.005;
       if (loadingProgress > 1) loadingProgress = 1;
 
       if (loadingProgress === 1) {
