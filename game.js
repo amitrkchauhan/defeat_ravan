@@ -15,6 +15,7 @@ const SCREEN_CREDITS = 5;
 let SCREEN = SCREEN_TITLE;
 
 // Game states
+
 const SCREEN_GAME_START_COUNTDOWN = 0;
 const SCREEN_GAME_ALL_WINDOW_OPEN = 1;
 const SCREEN_GAME_WATCH_TIMER = 2;
@@ -253,6 +254,7 @@ function animateCell(cell) {
               cell.blastFrame++;
               if (cell.blastFrame >= blastFrames.length) {
                 clearInterval(blastInterval);
+                showOfferPopup(cell.devil);
                 cell.state = "completed";
               }
             }, 150);
