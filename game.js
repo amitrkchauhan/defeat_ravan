@@ -1,6 +1,8 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+//This is a test
+
 const GRID_ROWS = 5;
 const GRID_COLS = 4;
 const SPACING = 3;
