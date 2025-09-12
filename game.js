@@ -254,7 +254,7 @@ function drawScene() {
 
         setInterval(() => {
           loadingProgress += 0.01;
-        }, 100);
+        }, 1000);
         if (loadingProgress >= 1) {
           loadingProgress = 1;
         }
