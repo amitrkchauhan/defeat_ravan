@@ -6,22 +6,40 @@ const GRID_COLS = 4;
 const SPACING = 3;
 
 // Screens
+const SCREEN_NONE = -1;
 const SCREEN_TITLE = 0;
-const SCREEN_INSTRUCTIONS1 = 1;
-const SCREEN_GAME = 2;
-const SCREEN_INSTRUCTIONS2 = 3;
-const SCREEN_GAMEOVER = 4;
-const SCREEN_CREDITS = 5;
-let SCREEN = -1;
+const SCREEN_GAME = 1;
+const SCREEN_WIN = 2;
+const SCREEN_LOOSE = 3;
+const SCREEN_INSTRUCTIONS1 = 4;
+const SCREEN_INSTRUCTIONS2 = 5;
+
+const TOTAL_HEADS = 10;
+let headCount = 0;
+
+let SCREEN = SCREEN_NONE;
 
 // Game states
-const SCREEN_GAME_START_COUNTDOWN = 0;
-const SCREEN_GAME_ALL_WINDOW_OPEN = 1;
-const SCREEN_GAME_PLAYING = 2;
-const SCREEN_GAME_BLASTING = 3;
-const SCREEN_GAME_POPUP = 4;
-const SCREEN_GAME_ENDED = 5;
-let gameState = SCREEN_GAME_START_COUNTDOWN;
+const gameStates = {
+  NONE: -1,
+  ALL_WINDOW_OPEN: 0,
+  INSTRUCTION1: 1,
+  TIMER: 2,
+  ALL_WINDOW_CLOSE: 3,
+  INSTRUCTION2: 4,
+  START: 5,
+  POPUP: 6,
+  WIN: 7,
+  LOOSE: 8
+};
+const SCREEN_GAME_START_COUNTDOWN = 10;
+const SCREEN_GAME_ALL_WINDOW_OPEN = 11;
+const SCREEN_GAME_PLAYING = 12;
+const SCREEN_GAME_BLASTING = 13;
+const SCREEN_GAME_POPUP = 14;
+const SCREEN_GAME_ENDED = 15;
+let gameState = gameStates.NONE;
+let playerLives = 3;
 
 // Countdown & reveal timer
 let countdown = 3;
@@ -42,7 +60,8 @@ const titleImg = new Image();
 titleImg.src = "assets/title1.png";
 titleImg.onload = () => {
   startLoadingAssets();
-  SCREEN = SCREEN_TITLE;
+  setScreen(SCREEN_TITLE);
+  // SCREEN = SCREEN_TITLE;
 };
 
 // Asset paths
@@ -61,6 +80,11 @@ const assetPaths = [
   "assets/blast1.png",
   "assets/blast2.png",
   "assets/blast3.png",
+  "assets/hud_bg.png",
+  "assets/hud_cross.png",
+  "assets/hud_heart.png",
+  "assets/hud_heart2.png",
+  "assets/ajio.png",
   ...Array.from({ length: 10 }, (_, i) => `assets/D${i + 1}.png`),
   ...Array.from({ length: 10 }, (_, i) => `assets/offer${i + 1}.png`)
 ];
@@ -178,7 +202,12 @@ function drawGrid() {
           case SCREEN_GAME_START_COUNTDOWN:
             ctx.drawImage(windowFrames[0], x, y, cellSize, cellSize);
             break;
-          case SCREEN_GAME_ALL_WINDOW_OPEN:
+          case gameStates.ALL_WINDOW_OPEN:
+          case gameStates.INSTRUCTION1:
+          case gameStates.INSTRUCTION2:
+          case gameStates.TIMER:
+          case gameStates.WIN:
+          case gameStates.LOOSE:
 
             if (cell.devil && cell.devil.devilImg) {
               const scale = 0.85;
@@ -190,7 +219,8 @@ function drawGrid() {
             }
             ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
             break;
-          case SCREEN_GAME_PLAYING:
+          // case SCREEN_GAME_PLAYING:
+          case gameStates.START:
             // console.log(cell.state);
             if (cell.devil && cell.devil.devilImg && cell.state != "open" && cell.state != "completed" && cell.state != "blasting") {
               const scale = 0.85;
@@ -221,10 +251,6 @@ function drawGrid() {
               console.log("else Unknown cell state:", cell.state);
             }
             break;
-          case SCREEN_GAME_POPUP:
-            break;
-          case SCREEN_GAME_ENDED:
-            break;
         }
       }
     }
@@ -233,6 +259,8 @@ function drawGrid() {
 
 function drawScene() {
   drawBackground();
+
+
   if (SCREEN > SCREEN_TITLE && assetsToLoad > 0) {
     drawGrid();
   }
@@ -263,26 +291,15 @@ function drawScene() {
         if (loadingProgress >= 1) {
           loadingProgress = 1;
           setTimeout(() => {
-            SCREEN = SCREEN_INSTRUCTIONS1;
+            // SCREEN = SCREEN_INSTRUCTIONS1;
+            setScreen(SCREEN_GAME);
+            // SCREEN = SCREEN_GAME;
           }, 500);
         }
       }
       break;
     case SCREEN_INSTRUCTIONS1:
-      const instruction1_scale = canvas.width / loadedAssets["assets/instruction1.png"].width;
-      const instruction1W = loadedAssets["assets/instruction1.png"].width * instruction1_scale;
-      const instruction1H = loadedAssets["assets/instruction1.png"].height * instruction1_scale;
-      const instruction1X = (canvas.width - instruction1W) / 2;
-      const instruction1Y = (canvas.height - instruction1H) / 2;
-      ctx.drawImage(loadedAssets["assets/instruction1.png"], instruction1X, instruction1Y, instruction1W, instruction1H);
 
-      const startButton_scale = canvas.width / loadedAssets["assets/instruction1.png"].width;
-      const startButtonW = loadedAssets["assets/instruction1.png"].width * startButton_scale * 0.35;
-      const startButtonH = loadedAssets["assets/instruction1.png"].height * startButton_scale * 0.15;
-      const startButtonX = (canvas.width - startButtonW) / 2;
-      const startButtonY = (canvas.height - startButtonH) / 1.5;
-
-      ctx.drawImage(loadedAssets["assets/start_button.png"], startButtonX, startButtonY, startButtonW, startButtonH);
 
       break;
     case SCREEN_GAME:
@@ -294,18 +311,210 @@ function drawScene() {
       //   ctx.fillText(countdown, canvas.width / 2, canvas.height / 2);
       // }
 
-      if (gameState === SCREEN_GAME_ALL_WINDOW_OPEN) {
-        ctx.fillStyle = "yellow";
-        ctx.font = `${canvas.width * 0.08}px Arial Black`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "top";
-        ctx.fillText(revealTimer, canvas.width / 2, 30);
+      const hud_bg_scale = canvas.width / loadedAssets["assets/hud_bg.png"].width;
+      const hud_bgW = loadedAssets["assets/hud_bg.png"].width * hud_bg_scale;
+      const hud_bgH = loadedAssets["assets/hud_bg.png"].height * hud_bg_scale;
+      const hud_bgX = (canvas.width - hud_bgW) / 2;
+      const hud_bgY = hud_bgH / 2;
+      ctx.drawImage(loadedAssets["assets/hud_bg.png"], hud_bgX, hud_bgY, hud_bgW, hud_bgH);
+
+      // const hud_cross_scale = canvas.width / loadedAssets["assets/hud_cross.png"].width;
+      const hud_crossW = loadedAssets["assets/hud_cross.png"].width * 0.45;
+      const hud_crossH = loadedAssets["assets/hud_cross.png"].height * 0.45;
+      const hud_crossX = canvas.width - hud_crossW * 1.5;
+      const hud_crossY = (hud_crossH + hud_bgH) / 2.5;
+      ctx.drawImage(loadedAssets["assets/hud_cross.png"], hud_crossX, hud_crossY, hud_crossW, hud_crossH);
+
+
+      drawLives(playerLives);
+
+      ctx.fillStyle = "yellow";
+      ctx.font = `${canvas.width * 0.06}px Arial`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(headCount + "/10", canvas.width / 4.8, 32);
+
+      // const hud_heart_scale = canvas.width / loadedAssets["assets/hud_heart.png"].width;
+      // const hud_heartW = loadedAssets["assets/hud_heart.png"].width * 0.45;
+      // const hud_heartH = loadedAssets["assets/hud_heart.png"].height * 0.45;
+      // const hud_heartX = (canvas.width - hud_heartW) / 2;
+      // const hud_heartY = hud_heartH / 2;
+      // ctx.drawImage(loadedAssets["assets/hud_heart.png"], hud_heartX, hud_heartY, hud_heartW, hud_heartH);
+
+      switch (gameState) {
+        case gameStates.NONE:
+          break;
+        case gameStates.ALL_WINDOW_OPEN:
+
+          break;
+        case gameStates.INSTRUCTION1:
+          const instruction1_scale = canvas.width / loadedAssets["assets/instruction1.png"].width;
+          const instruction1W = loadedAssets["assets/instruction1.png"].width * instruction1_scale;
+          const instruction1H = loadedAssets["assets/instruction1.png"].height * instruction1_scale;
+          const instruction1X = (canvas.width - instruction1W) / 2;
+          const instruction1Y = (canvas.height - instruction1H) / 2;
+          ctx.drawImage(loadedAssets["assets/instruction1.png"], instruction1X, instruction1Y, instruction1W, instruction1H);
+
+          const startButton_scale = canvas.width / loadedAssets["assets/instruction1.png"].width;
+          const startButtonW = loadedAssets["assets/instruction1.png"].width * startButton_scale * 0.35;
+          const startButtonH = loadedAssets["assets/instruction1.png"].height * startButton_scale * 0.15;
+          const startButtonX = (canvas.width - startButtonW) / 2;
+          const startButtonY = (canvas.height - startButtonH) / 1.5;
+
+          ctx.drawImage(loadedAssets["assets/start_button.png"], startButtonX, startButtonY, startButtonW, startButtonH);
+
+          break;
+        case gameStates.TIMER:
+          ctx.fillStyle = "yellow";
+          ctx.font = `${canvas.width * 0.08}px Arial Black`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillText(revealTimer, canvas.width / 2, 72);
+          break;
+        case gameStates.ALL_WINDOW_CLOSE:
+          break;
+        case gameStates.INSTRUCTION2:
+          const instruction2_scale = canvas.width / loadedAssets["assets/instruction2.png"].width;
+          const instruction2W = loadedAssets["assets/instruction2.png"].width * instruction2_scale;
+          const instruction2H = loadedAssets["assets/instruction2.png"].height * instruction2_scale;
+          const instruction2X = (canvas.width - instruction2W) / 2;
+          const instruction2Y = (canvas.height - instruction2H) / 2;
+          ctx.drawImage(loadedAssets["assets/instruction2.png"], instruction2X, instruction2Y, instruction2W, instruction2H);
+
+          const findEvil_scale = canvas.width / loadedAssets["assets/find_evil_button.png"].width;
+          const findEvilW = loadedAssets["assets/find_evil_button.png"].width * findEvil_scale * 0.35;
+          const findEvilH = loadedAssets["assets/find_evil_button.png"].height * findEvil_scale * 0.35;
+          const findEvilX = (canvas.width - findEvilW) / 2;
+          const findEvilY = (canvas.height - findEvilH) / 1.5;
+
+          ctx.drawImage(loadedAssets["assets/find_evil_button.png"], findEvilX, findEvilY, findEvilW, findEvilH);
+
+          break;
+        case gameStates.WIN:
+          const win_screen_scale = canvas.width / loadedAssets["assets/win_screen.png"].width;
+          const win_screenW = loadedAssets["assets/win_screen.png"].width * win_screen_scale;
+          const win_screenH = loadedAssets["assets/win_screen.png"].height * win_screen_scale;
+          const win_screenX = (canvas.width - win_screenW) / 2;
+          const win_screenY = (canvas.height - win_screenH) / 2;
+          ctx.drawImage(loadedAssets["assets/win_screen.png"], win_screenX, win_screenY, win_screenW, win_screenH);
+
+          const play_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
+          const play_againW = loadedAssets["assets/play_again_button.png"].width * play_again_scale * 0.35;
+          const play_againH = loadedAssets["assets/play_again_button.png"].height * play_again_scale * 0.35;
+          const play_againX = (canvas.width - play_againW) / 2;
+          const play_againY = (canvas.height - play_againH) / 1.5;
+
+          ctx.drawImage(loadedAssets["assets/play_again_button.png"], play_againX, play_againY, play_againW, play_againH);
+          break;
+        case gameStates.LOOSE:
+
+          const loose_screen_scale = canvas.width / loadedAssets["assets/loose_screen.png"].width;
+          const loose_screenW = loadedAssets["assets/loose_screen.png"].width * loose_screen_scale;
+          const loose_screenH = loadedAssets["assets/loose_screen.png"].height * loose_screen_scale;
+          const loose_screenX = (canvas.width - loose_screenW) / 2;
+          const loose_screenY = (canvas.height - loose_screenH) / 2;
+          ctx.drawImage(loadedAssets["assets/loose_screen.png"], loose_screenX, loose_screenY, loose_screenW, loose_screenH);
+
+
+          const try_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
+          const try_againW = loadedAssets["assets/play_again_button.png"].width * try_again_scale * 0.35;
+          const try_againH = loadedAssets["assets/play_again_button.png"].height * try_again_scale * 0.35;
+          const try_againX = (canvas.width - try_againW) / 2;
+          const try_againY = (canvas.height - try_againH) / 1.5;
+
+          ctx.drawImage(loadedAssets["assets/play_again_button.png"], try_againX, try_againY, try_againW, try_againH);
+          break;
+        default:
+          break;
       }
       break;
   }
 }
 
 canvas.addEventListener("click", (e) => {
+
+  switch (SCREEN) {
+    case SCREEN_TITLE:
+      break;
+    case SCREEN_GAME:
+      switch (gameState) {
+        case gameStates.NONE:
+          break;
+        case gameStates.ALL_WINDOW_OPEN:
+          break;
+        case gameStates.INSTRUCTION1:
+          setInGameState(gameStates.TIMER)
+          break;
+        case gameStates.TIMER:
+          break;
+        case gameStates.ALL_WINDOW_CLOSE:
+          break;
+        case gameStates.INSTRUCTION2:
+          setInGameState(gameStates.START);
+          break;
+        case gameStates.START:
+          const rect = canvas.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+
+          for (let r = 0; r < GRID_ROWS; r++) {
+            for (let c = 0; c < GRID_COLS; c++) {
+              const x = offsetX + c * (cellSize + SPACING);
+              const y = offsetY + r * (cellSize + SPACING);
+
+              if (
+                mouseX >= x &&
+                mouseX <= x + cellSize &&
+                mouseY >= y &&
+                mouseY <= y + cellSize
+              ) {
+                const cell = grid[r][c];
+
+                if (cell.state === "closed") {
+                  animateWindow(cell, true, () => {
+
+                    setTimeout(() => {
+                      cell.state = "open";
+                      animateBlast(cell);
+                    }, 1000);
+                  });
+                }
+              }
+            }
+          }
+          break;
+        case gameStates.WIN:
+          playerLives = 3;
+          headCount = 0;
+          setupGrid();
+          setInGameState(gameStates.ALL_WINDOW_OPEN);
+          break;
+        case gameStates.LOOSE:
+          playerLives = 3;
+          headCount = 0;
+          setupGrid();
+          setInGameState(gameStates.ALL_WINDOW_OPEN);
+          break;
+        default:
+          break;
+      }
+      break;
+    case SCREEN_WIN:
+      playerLives = 3;
+      headCount = 0;
+      setupGrid();
+      setInGameState(gameStates.ALL_WINDOW_OPEN);
+
+      break;
+    case SCREEN_LOOSE:
+      playerLives = 3;
+      headCount = 0;
+      setupGrid();
+      setInGameState(gameStates.ALL_WINDOW_OPEN);
+      break
+  }
+
+
   if (SCREEN === SCREEN_INSTRUCTIONS1) {
     SCREEN = SCREEN_GAME;
     // gameState = SCREEN_GAME_START_COUNTDOWN;
@@ -328,8 +537,13 @@ canvas.addEventListener("click", (e) => {
               animateWindow(cell, false, () => {
                 cell.state = "closed";
               });
-            }));
-            gameState = SCREEN_GAME_PLAYING;
+            },
+              setTimeout(() => {
+                gameState = SCREEN_GAME_PLAYING
+              }, 1000)
+
+            ));
+            // gameState = SCREEN_GAME_PLAYING;
           }
         }, 1000);
       }
@@ -453,10 +667,24 @@ function animateBlast(cell) {
           clearInterval(blastInterval);
           // show popup then remove window
           cell.state = "completed";
+          headCount++;
+          if (headCount >= TOTAL_HEADS) {
+            setTimeout(() => {
+              setInGameState(gameStates.WIN);
+            }, 1000);
+          }
           showOfferPopup(cell.devil);
+
         }
       }, 150);
     }, 150);
+  } else {
+    playerLives--;
+    if (playerLives <= 0) {
+      setTimeout(() => {
+        setInGameState(gameStates.LOOSE);
+      }, 1000);
+    }
   }
 }
 
@@ -478,3 +706,150 @@ function showOfferPopup(devil) {
 closeOffer.addEventListener("click", () => {
   offerPopup.style.display = "none";
 });
+
+let previousScreen = SCREEN_NONE;
+function setScreen(screen) {
+  if (screen === previousScreen) return;
+  console.log("Transitioning to screen:", screen, previousScreen, SCREEN);
+  switch (screen) {
+    case SCREEN_TITLE:
+      break;
+    case SCREEN_GAME:
+      setInGameState(gameStates.ALL_WINDOW_OPEN);
+      break
+    case SCREEN_WIN:
+      break;
+    case SCREEN_LOOSE:
+      break;
+    case SCREEN_INSTRUCTIONS1:
+      break;
+    case SCREEN_INSTRUCTIONS2:
+      break;
+    default:
+      break;
+  }
+  previousScreen = screen;
+  SCREEN = screen;
+}
+
+let previousGameState = gameStates.NONE;
+function setInGameState(state) {
+  console.log("Transitioning to game state:", state, previousGameState, gameState);
+  if (state === previousGameState) return;
+  switch (state) {
+    case gameStates.NONE:
+      break;
+    case gameStates.ALL_WINDOW_OPEN:
+      setTimeout(() => {
+        openAllWindows(() => {
+          setTimeout(() => {
+            console.log("ALL_WINDOW_OPEN: Revealing all windows 5555 ");
+            setInGameState(gameStates.INSTRUCTION1);
+          }, 1000);
+        });
+
+      }, 1000);
+      break;
+    case gameStates.INSTRUCTION1:
+      break;
+    case gameStates.TIMER:
+      revealTimer = 5;
+
+      revealInterval = setInterval(() => {
+        revealTimer--;
+        if (revealTimer <= 0) {
+          clearInterval(revealInterval);
+          closeAllWindows(() => {
+            setInGameState(gameStates.INSTRUCTION2);
+          });
+        }
+      }, 1000);
+      break;
+    case gameStates.ALL_WINDOW_CLOSE:
+      break;
+    case gameStates.INSTRUCTION2:
+      break;
+    case gameStates.START:
+      break;
+    case gameStates.POPUP:
+      break;
+    default:
+      break;
+  }
+  previousGameState = state;
+  gameState = state;
+}
+
+
+function openAllWindows(onAllComplete) {
+  let total = 0;
+  let finished = 0;
+
+  grid.forEach(row => row.forEach(cell => {
+    if (cell.state === "closed") {
+      total++;
+      animateWindow(cell, true, () => {
+        cell.state = "open";
+        console.log("Opened:", cell);
+
+        finished++;
+        if (finished === total) {
+          console.log("✅ All windows finished opening!");
+          if (onAllComplete) onAllComplete();
+        }
+      });
+    }
+  }));
+
+  if (total === 0 && onAllComplete) {
+    // Nothing to animate, call immediately
+    onAllComplete();
+  }
+}
+
+function closeAllWindows(onAllComplete) {
+  let total = 0;
+  let finished = 0;
+
+  grid.forEach(row => row.forEach(cell => {
+    total++;
+    animateWindow(cell, false, () => {
+      cell.state = "closed";
+
+      finished++;
+      if (finished === total) {
+        console.log("✅ All windows closed!");
+        if (onAllComplete) onAllComplete();
+      }
+    });
+  }));
+
+  if (total === 0 && onAllComplete) {
+    onAllComplete();
+  }
+}
+function drawLives(lives) {
+  const heartImg = loadedAssets["assets/hud_heart.png"];
+  const heartImg2 = loadedAssets["assets/hud_heart2.png"];
+  if (!heartImg) return;
+  if (!heartImg2) return;
+
+  const heartW = heartImg.width * 0.40;
+  const heartH = heartImg.height * 0.40;
+  const margin = 10; // space between hearts
+
+  // Draw hearts aligned at top-left corner
+  // const startX = 20; 
+  const startX = (canvas.width - (3 * (heartW + margin))) / 1.9;
+  const startY = heartH * 1;
+
+  for (let i = 0; i < 3; i++) {
+    const x = startX + i * (heartW + margin);
+    if (i >= lives) {
+      // ctx.drawImage(heartImg2, x, startY, heartW, heartH);
+    } else {
+      ctx.drawImage(heartImg, x, startY, heartW, heartH);
+    }
+
+  }
+}
