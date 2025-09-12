@@ -75,7 +75,7 @@ function startLoadingAssets() {
     img.src = path;
     img.onload = () => {
       assetsLoaded++;
-      console.log(`Loaded: ${path} (${assetsLoaded}/${assetsToLoad})`);
+      // console.log(`Loaded: ${path} (${assetsLoaded}/${assetsToLoad})`);
       loadedAssets[path] = img;
       if (assetsLoaded === assetsToLoad) {
         setupFrames();
@@ -250,10 +250,18 @@ function drawScene() {
       }
 
       if (assetsToLoad > 0) {
-        loadingProgress = assetsLoaded / assetsToLoad;
+        // loadingProgress = assetsLoaded / assetsToLoad;
+
+        setInterval(() => {
+          loadingProgress += 0.01;
+        }, 100);
+        if (loadingProgress >= 1) {
+          loadingProgress = 1;
+        }
         drawLoadingBar();
 
         if (loadingProgress >= 1) {
+          loadingProgress = 1;
           setTimeout(() => {
             SCREEN = SCREEN_INSTRUCTIONS1;
           }, 500);
@@ -351,7 +359,7 @@ canvas.addEventListener("click", (e) => {
 
           if (cell.state === "closed") {
             animateWindow(cell, true, () => {
-              
+
               setTimeout(() => {
                 cell.state = "open";
                 animateBlast(cell);
