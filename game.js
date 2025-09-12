@@ -1,6 +1,22 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+
+// Background music
+const bgMusic = new Audio("assets/bg_loop.mp3");
+bgMusic.loop = true;      // keep looping
+bgMusic.volume = 0.5;     // default volume (0.0 - 1.0)
+
+// Example SFX
+const sfxClick = new Audio("assets/button_click.mp3");
+const sfxBlast = new Audio("assets/explosion.mp3");
+const sfxEvilLaugh1 = new Audio("assets/evil_laugh.mp3");
+const sfxEvilLaugh2 = new Audio("assets/evil_laugh2.mp3");
+const sfxWindow = new Audio("assets/window.mp3");
+const sfxWrongAnswer = new Audio("assets/wrong_answer.mp3");
+
+
+// const sfxWin   = new Audio("assets/win.mp3");
 const GRID_ROWS = 5;
 const GRID_COLS = 4;
 const SPACING = 3;
@@ -55,12 +71,17 @@ let loadingProgress = 0;
 let windowFrames = [];
 let blastFrames = [];
 
+const brandLogo = new Image();
+brandLogo.src = "assets/ajio.png";
+
+
 // Title image (load first)
 const titleImg = new Image();
 titleImg.src = "assets/title1.png";
 titleImg.onload = () => {
   startLoadingAssets();
   setScreen(SCREEN_TITLE);
+  playBGMusic();
   // SCREEN = SCREEN_TITLE;
 };
 
@@ -88,6 +109,7 @@ const assetPaths = [
   ...Array.from({ length: 10 }, (_, i) => `assets/D${i + 1}.png`),
   ...Array.from({ length: 10 }, (_, i) => `assets/offer${i + 1}.png`)
 ];
+
 
 const loadedAssets = {};
 
@@ -443,6 +465,7 @@ canvas.addEventListener("click", (e) => {
         case gameStates.ALL_WINDOW_OPEN:
           break;
         case gameStates.INSTRUCTION1:
+          playSFX(sfxEvilLaugh1);
           setInGameState(gameStates.TIMER)
           break;
         case gameStates.TIMER:
@@ -450,13 +473,16 @@ canvas.addEventListener("click", (e) => {
         case gameStates.ALL_WINDOW_CLOSE:
           break;
         case gameStates.INSTRUCTION2:
+          stopBGMusic();
+          playSFX(sfxEvilLaugh1);
           setInGameState(gameStates.START);
           break;
         case gameStates.START:
           const rect = canvas.getBoundingClientRect();
           const mouseX = e.clientX - rect.left;
           const mouseY = e.clientY - rect.top;
-
+                
+          playSFX(sfxWindow);
           for (let r = 0; r < GRID_ROWS; r++) {
             for (let c = 0; c < GRID_COLS; c++) {
               const x = offsetX + c * (cellSize + SPACING);
@@ -471,11 +497,13 @@ canvas.addEventListener("click", (e) => {
                 const cell = grid[r][c];
 
                 if (cell.state === "closed") {
+                  
                   animateWindow(cell, true, () => {
 
                     setTimeout(() => {
                       cell.state = "open";
                       animateBlast(cell);
+
                     }, 1000);
                   });
                 }
@@ -614,6 +642,25 @@ function drawLoadingBar() {
   ctx.fillStyle = "#fcda00ff";
   drawRoundedRect(barX, barY, barWidth * loadingProgress, barHeight, 10);
   ctx.fill();
+
+        if (brandLogo.complete) {
+        // const scale = canvas.width / titleImg.width;
+        // const titleW = titleImg.width * scale;
+        // const titleH = titleImg.height * scale;
+        // const titleX = (canvas.width - titleW) / 2;
+        // const titleY = (canvas.height - titleH) / 3;
+
+      const scale = canvas.width / brandLogo.width;
+    const brandLogoW = brandLogo.width * scale * 0.4;
+    const brandLogoH = brandLogo.height * scale * 0.4;
+    const brandLogoX = (canvas.width - brandLogoW) / 2;
+    const brandLogoY = (canvas.height - brandLogoH) / 1.25;
+        ctx.drawImage(brandLogo, brandLogoX, brandLogoY, brandLogoW, brandLogoH);
+      }
+
+
+
+
 }
 
 function drawRoundedRect(x, y, width, height, radius) {
@@ -654,7 +701,7 @@ function animateWindow(cell, open = true, onComplete = null) {
 }
 
 function animateBlast(cell) {
-
+  
   // Trigger blast if devil
   if (cell.devil) {
     setTimeout(() => {
@@ -664,13 +711,16 @@ function animateBlast(cell) {
       let blastInterval = setInterval(() => {
         cell.blastFrame++;
         if (cell.blastFrame >= blastFrames.length) {
+          playSFX(sfxBlast);
           clearInterval(blastInterval);
+          
           // show popup then remove window
           cell.state = "completed";
           headCount++;
           if (headCount >= TOTAL_HEADS) {
             setTimeout(() => {
               setInGameState(gameStates.WIN);
+              playBGMusic();
             }, 1000);
           }
           showOfferPopup(cell.devil);
@@ -680,8 +730,10 @@ function animateBlast(cell) {
     }, 150);
   } else {
     playerLives--;
+    playSFX(sfxWrongAnswer);
     if (playerLives <= 0) {
       setTimeout(() => {
+        playSFX(sfxEvilLaugh2);
         setInGameState(gameStates.LOOSE);
       }, 1000);
     }
@@ -741,7 +793,9 @@ function setInGameState(state) {
       break;
     case gameStates.ALL_WINDOW_OPEN:
       setTimeout(() => {
+        playSFX(sfxWindow);
         openAllWindows(() => {
+          
           setTimeout(() => {
             console.log("ALL_WINDOW_OPEN: Revealing all windows 5555 ");
             setInGameState(gameStates.INSTRUCTION1);
@@ -760,6 +814,7 @@ function setInGameState(state) {
         if (revealTimer <= 0) {
           clearInterval(revealInterval);
           closeAllWindows(() => {
+            playSFX(sfxWindow);
             setInGameState(gameStates.INSTRUCTION2);
           });
         }
@@ -852,4 +907,25 @@ function drawLives(lives) {
     }
 
   }
+}
+
+function playBGMusic() {
+  bgMusic.play().catch(err => console.log("Autoplay blocked:", err));
+}
+
+
+
+function stopBGMusic() {
+  bgMusic.pause();
+  bgMusic.currentTime = 0; // reset to start
+}
+
+function setBGVolume(value) {
+  bgMusic.volume = 0.5;
+  // bgMusic.volume = Math.min(1, Math.max(0, value)); // keep between 0 and 1
+}
+
+function playSFX(sfx) {
+  sfx.currentTime = 0; // rewind so it can replay quickly
+  sfx.play();  
 }
