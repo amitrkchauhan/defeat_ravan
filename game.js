@@ -15,6 +15,8 @@ const sfxEvilLaugh2 = new Audio("assets/evil_laugh2.mp3");
 const sfxWindow = new Audio("assets/window.mp3");
 const sfxWrongAnswer = new Audio("assets/wrong_answer.mp3");
 
+let firstTouch = false;
+let pulseTime = 0;
 
 // const sfxWin   = new Audio("assets/win.mp3");
 const GRID_ROWS = 5;
@@ -308,13 +310,36 @@ function drawScene() {
         if (loadingProgress >= 1) {
           loadingProgress = 1;
         }
-        drawLoadingBar();
+        if (!firstTouch) {
+          drawLoadingBar();
+        } else {
+          const baseSize = canvas.width * 0.08;
+          const pulseScale = 1 + 0.1 * Math.sin(pulseTime * 2); // pulse between 100% and 110%
+
+          ctx.fillStyle = "yellow";
+          ctx.font = `${baseSize * pulseScale}px Arial`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillText("TAP TO PLAY", canvas.width / 2, canvas.height * 0.85);
+
+        }
+        if (brandLogo.complete) {
+          const scale = canvas.width / brandLogo.width;
+          const brandLogoW = brandLogo.width * scale * 0.4;
+          const brandLogoH = brandLogo.height * scale * 0.4;
+          const brandLogoX = (canvas.width - brandLogoW) / 2;
+          const brandLogoY = (canvas.height - brandLogoH) / 1.25;
+          ctx.drawImage(brandLogo, brandLogoX, brandLogoY, brandLogoW, brandLogoH);
+        }
+
 
         if (loadingProgress >= 1) {
           loadingProgress = 1;
           setTimeout(() => {
+            firstTouch = true;
+
             // SCREEN = SCREEN_INSTRUCTIONS1;
-            setScreen(SCREEN_GAME);
+            // setScreen(SCREEN_GAME);
             // SCREEN = SCREEN_GAME;
           }, 500);
         }
@@ -457,6 +482,8 @@ canvas.addEventListener("click", (e) => {
 
   switch (SCREEN) {
     case SCREEN_TITLE:
+      playBGMusic();
+      setScreen(SCREEN_GAME);
       break;
     case SCREEN_GAME:
       switch (gameState) {
@@ -481,7 +508,7 @@ canvas.addEventListener("click", (e) => {
           const rect = canvas.getBoundingClientRect();
           const mouseX = e.clientX - rect.left;
           const mouseY = e.clientY - rect.top;
-                
+
           playSFX(sfxWindow);
           for (let r = 0; r < GRID_ROWS; r++) {
             for (let c = 0; c < GRID_COLS; c++) {
@@ -497,7 +524,7 @@ canvas.addEventListener("click", (e) => {
                 const cell = grid[r][c];
 
                 if (cell.state === "closed") {
-                  
+
                   animateWindow(cell, true, () => {
 
                     setTimeout(() => {
@@ -617,6 +644,7 @@ canvas.addEventListener("click", (e) => {
 });
 
 function gameLoop() {
+  pulseTime += 0.05;  // adjust speed of pulsing
   drawScene();
   requestAnimationFrame(gameLoop);
 }
@@ -642,25 +670,6 @@ function drawLoadingBar() {
   ctx.fillStyle = "#fcda00ff";
   drawRoundedRect(barX, barY, barWidth * loadingProgress, barHeight, 10);
   ctx.fill();
-
-        if (brandLogo.complete) {
-        // const scale = canvas.width / titleImg.width;
-        // const titleW = titleImg.width * scale;
-        // const titleH = titleImg.height * scale;
-        // const titleX = (canvas.width - titleW) / 2;
-        // const titleY = (canvas.height - titleH) / 3;
-
-      const scale = canvas.width / brandLogo.width;
-    const brandLogoW = brandLogo.width * scale * 0.4;
-    const brandLogoH = brandLogo.height * scale * 0.4;
-    const brandLogoX = (canvas.width - brandLogoW) / 2;
-    const brandLogoY = (canvas.height - brandLogoH) / 1.25;
-        ctx.drawImage(brandLogo, brandLogoX, brandLogoY, brandLogoW, brandLogoH);
-      }
-
-
-
-
 }
 
 function drawRoundedRect(x, y, width, height, radius) {
@@ -701,7 +710,7 @@ function animateWindow(cell, open = true, onComplete = null) {
 }
 
 function animateBlast(cell) {
-  
+
   // Trigger blast if devil
   if (cell.devil) {
     setTimeout(() => {
@@ -713,7 +722,7 @@ function animateBlast(cell) {
         if (cell.blastFrame >= blastFrames.length) {
           playSFX(sfxBlast);
           clearInterval(blastInterval);
-          
+
           // show popup then remove window
           cell.state = "completed";
           headCount++;
@@ -795,7 +804,7 @@ function setInGameState(state) {
       setTimeout(() => {
         playSFX(sfxWindow);
         openAllWindows(() => {
-          
+
           setTimeout(() => {
             console.log("ALL_WINDOW_OPEN: Revealing all windows 5555 ");
             setInGameState(gameStates.INSTRUCTION1);
@@ -927,5 +936,5 @@ function setBGVolume(value) {
 
 function playSFX(sfx) {
   sfx.currentTime = 0; // rewind so it can replay quickly
-  sfx.play();  
+  sfx.play();
 }
