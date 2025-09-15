@@ -1,6 +1,11 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+const BUTTON_STATE_NONE = 0;
+const BUTTON_STATE_DOWN = 1;
+const BUTTON_STATE_UP = 2;
+
+let button_state = BUTTON_STATE_NONE;
 
 // Background music
 const bgMusic = new Audio("assets/bg_loop.mp3");
@@ -108,6 +113,7 @@ const assetPaths = [
   "assets/hud_heart.png",
   "assets/hud_heart2.png",
   "assets/ajio.png",
+  "assets/wrong_cross.png",
   ...Array.from({ length: 10 }, (_, i) => `assets/D${i + 1}.png`),
   ...Array.from({ length: 10 }, (_, i) => `assets/offer${i + 1}.png`)
 ];
@@ -262,6 +268,8 @@ function drawGrid() {
               ctx.drawImage(blastFrames[cell.blastFrame], devilX, devilY, devilW, devilH);
             }
 
+
+
             if (cell.state === "closed") {
               ctx.drawImage(windowFrames[0], x, y, cellSize, cellSize);
               // console.log("closed Unknown cell state:", cell.state);
@@ -269,6 +277,15 @@ function drawGrid() {
               ctx.drawImage(windowFrames[cell.frame], x, y, cellSize, cellSize);
               // console.log("opening Unknown cell state:", cell.state);
             } else if (cell.state === "open" || cell.state === "completed" || cell.state === "blasting") {
+
+              if (!cell.devil) {
+                const scale = 0.80;
+                const devilW = cellSize * scale;
+                const devilH = cellSize * scale;
+                const devilX = x + (cellSize - devilW) / 2;
+                const devilY = y + (cellSize - devilH) / 2;
+                ctx.drawImage(loadedAssets["assets/wrong_cross.png"], devilX, devilY, devilW, devilH);
+              }
               ctx.drawImage(windowFrames[2], x, y, cellSize, cellSize);
               // console.log("open completed Unknown cell state:", cell.state);
             } else {
@@ -380,6 +397,7 @@ function drawScene() {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       ctx.fillText(headCount + "/10", canvas.width / 4.8, 32);
+
 
       // const hud_heart_scale = canvas.width / loadedAssets["assets/hud_heart.png"].width;
       // const hud_heartW = loadedAssets["assets/hud_heart.png"].width * 0.45;
@@ -503,6 +521,7 @@ canvas.addEventListener("click", (e) => {
           stopBGMusic();
           playSFX(sfxEvilLaugh1);
           setInGameState(gameStates.START);
+          button_state = BUTTON_STATE_NONE;
           break;
         case gameStates.START:
           const rect = canvas.getBoundingClientRect();
@@ -524,14 +543,17 @@ canvas.addEventListener("click", (e) => {
                 const cell = grid[r][c];
 
                 if (cell.state === "closed") {
-
+                  console.log("ButtonState 0000 ", button_state);
+                  if (button_state == BUTTON_STATE_DOWN) return;
+                  button_state = BUTTON_STATE_DOWN;
+                  console.log("ButtonState 1111 ", button_state);
                   animateWindow(cell, true, () => {
 
                     setTimeout(() => {
                       cell.state = "open";
                       animateBlast(cell);
 
-                    }, 1000);
+                    }, 500);
                   });
                 }
               }
@@ -725,6 +747,8 @@ function animateBlast(cell) {
 
           // show popup then remove window
           cell.state = "completed";
+          button_state = BUTTON_STATE_NONE;
+          console.log("ButtonState 2222 ", button_state);
           headCount++;
           if (headCount >= TOTAL_HEADS) {
             setTimeout(() => {
@@ -732,13 +756,15 @@ function animateBlast(cell) {
               playBGMusic();
             }, 1000);
           }
-          showOfferPopup(cell.devil);
+          // showOfferPopup(cell.devil);
 
         }
-      }, 150);
-    }, 150);
+      }, 75);
+    }, 10);
   } else {
     playerLives--;
+    button_state = BUTTON_STATE_NONE;
+    console.log("ButtonState 3333 ", button_state);
     playSFX(sfxWrongAnswer);
     if (playerLives <= 0) {
       setTimeout(() => {
@@ -938,3 +964,13 @@ function playSFX(sfx) {
   sfx.currentTime = 0; // rewind so it can replay quickly
   sfx.play();
 }
+
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    // Page is hidden, pause music
+    stopBGMusic();
+  } else {
+    // Page is visible, resume music
+    playBGMusic();
+  }
+});
