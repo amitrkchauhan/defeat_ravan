@@ -756,7 +756,7 @@ function animateBlast(cell) {
               playBGMusic();
             }, 1000);
           }
-          // showOfferPopup(cell.devil);
+          showOfferPopup(cell.devil);
 
         }
       }, 75);
