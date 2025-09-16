@@ -5,6 +5,30 @@ const BUTTON_STATE_NONE = 0;
 const BUTTON_STATE_DOWN = 1;
 const BUTTON_STATE_UP = 2;
 
+
+let hud_cross;
+let hud_crossH;
+let hud_crossX;
+let hud_crossY;
+
+let play_again_scale;
+let play_againW;
+let play_againH;
+let play_againX;
+let play_againY;
+
+let visit_brand_scale;
+let visit_brandW;
+let visit_brandH;
+let visit_brandX;
+let visit_brandY;
+
+let button_close_scale;
+let button_closeW;
+let button_closeH;
+let button_closeX;
+let button_closeY;
+
 let button_state = BUTTON_STATE_NONE;
 
 // Background music
@@ -101,7 +125,6 @@ const assetPaths = [
   "assets/loose_screen.png",
   "assets/win_screen.png",
   "assets/play_again_button.png",
-  "assets/close_button.png",
   "assets/window1.png",
   "assets/window2.png",
   "assets/window3.png",
@@ -114,6 +137,8 @@ const assetPaths = [
   "assets/hud_heart2.png",
   "assets/ajio.png",
   "assets/wrong_cross.png",
+  "assets/button_visit_ajio.png",
+  "assets/button_close.png",
   ...Array.from({ length: 10 }, (_, i) => `assets/D${i + 1}.png`),
   ...Array.from({ length: 10 }, (_, i) => `assets/offer${i + 1}.png`)
 ];
@@ -165,7 +190,7 @@ function setupGrid() {
     devilData.push({
       devilImg: loadedAssets[`assets/D${i}.png`],
       offerImg: loadedAssets[`assets/offer${i}.png`],
-      offerLink: `https://www.ajio.com/${i}`
+      offerLink: `https://www.ajio.com`
     });
   }
 
@@ -383,10 +408,12 @@ function drawScene() {
       ctx.drawImage(loadedAssets["assets/hud_bg.png"], hud_bgX, hud_bgY, hud_bgW, hud_bgH);
 
       // const hud_cross_scale = canvas.width / loadedAssets["assets/hud_cross.png"].width;
-      const hud_crossW = loadedAssets["assets/hud_cross.png"].width * 0.45;
-      const hud_crossH = loadedAssets["assets/hud_cross.png"].height * 0.45;
-      const hud_crossX = canvas.width - hud_crossW * 1.5;
-      const hud_crossY = (hud_crossH + hud_bgH) / 2.5;
+
+      hud_crossW = loadedAssets["assets/hud_cross.png"].width * 0.45;
+      hud_crossH = loadedAssets["assets/hud_cross.png"].height * 0.45;
+      hud_crossX = canvas.width - hud_crossW * 1.5;
+      hud_crossY = (hud_crossH + hud_bgH) / 2.5;
+      
       ctx.drawImage(loadedAssets["assets/hud_cross.png"], hud_crossX, hud_crossY, hud_crossW, hud_crossH);
 
 
@@ -456,38 +483,91 @@ function drawScene() {
 
           break;
         case gameStates.WIN:
-          const win_screen_scale = canvas.width / loadedAssets["assets/win_screen.png"].width;
-          const win_screenW = loadedAssets["assets/win_screen.png"].width * win_screen_scale;
-          const win_screenH = loadedAssets["assets/win_screen.png"].height * win_screen_scale;
-          const win_screenX = (canvas.width - win_screenW) / 2;
-          const win_screenY = (canvas.height - win_screenH) / 2;
-          ctx.drawImage(loadedAssets["assets/win_screen.png"], win_screenX, win_screenY, win_screenW, win_screenH);
-
-          const play_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
-          const play_againW = loadedAssets["assets/play_again_button.png"].width * play_again_scale * 0.35;
-          const play_againH = loadedAssets["assets/play_again_button.png"].height * play_again_scale * 0.35;
-          const play_againX = (canvas.width - play_againW) / 2;
-          const play_againY = (canvas.height - play_againH) / 1.5;
-
-          ctx.drawImage(loadedAssets["assets/play_again_button.png"], play_againX, play_againY, play_againW, play_againH);
-          break;
         case gameStates.LOOSE:
+          if (gameState === gameStates.WIN) {
+            const win_screen_scale = canvas.width / loadedAssets["assets/win_screen.png"].width;
+            const win_screenW = loadedAssets["assets/win_screen.png"].width * win_screen_scale;
+            const win_screenH = loadedAssets["assets/win_screen.png"].height * win_screen_scale;
+            const win_screenX = (canvas.width - win_screenW) / 2;
+            const win_screenY = (canvas.height - win_screenH) / 2;
+            ctx.drawImage(loadedAssets["assets/win_screen.png"], win_screenX, win_screenY, win_screenW, win_screenH);
+          } else if (gameState === gameStates.LOOSE) {
+            const loose_screen_scale = canvas.width / loadedAssets["assets/loose_screen.png"].width;
+            const loose_screenW = loadedAssets["assets/loose_screen.png"].width * loose_screen_scale;
+            const loose_screenH = loadedAssets["assets/loose_screen.png"].height * loose_screen_scale;
+            const loose_screenX = (canvas.width - loose_screenW) / 2;
+            const loose_screenY = (canvas.height - loose_screenH) / 2;
+            ctx.drawImage(loadedAssets["assets/loose_screen.png"], loose_screenX, loose_screenY, loose_screenW, loose_screenH);
+          }
 
-          const loose_screen_scale = canvas.width / loadedAssets["assets/loose_screen.png"].width;
-          const loose_screenW = loadedAssets["assets/loose_screen.png"].width * loose_screen_scale;
-          const loose_screenH = loadedAssets["assets/loose_screen.png"].height * loose_screen_scale;
-          const loose_screenX = (canvas.width - loose_screenW) / 2;
-          const loose_screenY = (canvas.height - loose_screenH) / 2;
-          ctx.drawImage(loadedAssets["assets/loose_screen.png"], loose_screenX, loose_screenY, loose_screenW, loose_screenH);
 
 
-          const try_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
-          const try_againW = loadedAssets["assets/play_again_button.png"].width * try_again_scale * 0.35;
-          const try_againH = loadedAssets["assets/play_again_button.png"].height * try_again_scale * 0.35;
-          const try_againX = (canvas.width - try_againW) / 2;
-          const try_againY = (canvas.height - try_againH) / 1.5;
 
-          ctx.drawImage(loadedAssets["assets/play_again_button.png"], try_againX, try_againY, try_againW, try_againH);
+          play_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
+          play_againW = loadedAssets["assets/play_again_button.png"].width * play_again_scale * 0.35;
+          play_againH = loadedAssets["assets/play_again_button.png"].height * play_again_scale * 0.35;
+          play_againX = (canvas.width - play_againW) / 8;
+          play_againY = (canvas.height - play_againH) / 1.71;
+          
+          ctx.drawImage(loadedAssets["assets/play_again_button.png"], play_againX, play_againY, play_againW, play_againH);
+          // ctx.fillRect(play_againX, play_againY, play_againW, play_againH);
+
+          button_close_scale = canvas.width / loadedAssets["assets/button_close.png"].width; 
+          button_closeW = loadedAssets["assets/button_close.png"].width * button_close_scale * 0.35;
+          button_closeH = loadedAssets["assets/button_close.png"].height * button_close_scale * 0.35;
+          button_closeX = (canvas.width - button_closeW) / 1.2;
+          button_closeY = (canvas.height - button_closeH) / 1.71;
+          
+          ctx.drawImage(loadedAssets["assets/button_close.png"], button_closeX, button_closeY, button_closeW, button_closeH);
+          // ctx.fillRect(button_closeX, button_closeY, button_closeW, button_closeH);
+
+          visit_brand_scale = canvas.width / loadedAssets["assets/button_visit_ajio.png"].width;
+          visit_brandW = loadedAssets["assets/button_visit_ajio.png"].width * visit_brand_scale * 0.35;
+          visit_brandH = loadedAssets["assets/button_visit_ajio.png"].height * visit_brand_scale * 0.35;
+          visit_brandX = (canvas.width - visit_brandW) / 2;
+          visit_brandY = (canvas.height - visit_brandH) / 1.5;
+          
+          ctx.drawImage(loadedAssets["assets/button_visit_ajio.png"], visit_brandX, visit_brandY, visit_brandW, visit_brandH);
+
+          // ctx.fillRect(visit_brandX, visit_brandY, visit_brandW, visit_brandH);
+
+
+
+          break;
+        // case gameStates.LOOSE:
+
+        //   const loose_screen_scale = canvas.width / loadedAssets["assets/loose_screen.png"].width;
+        //   const loose_screenW = loadedAssets["assets/loose_screen.png"].width * loose_screen_scale;
+        //   const loose_screenH = loadedAssets["assets/loose_screen.png"].height * loose_screen_scale;
+        //   const loose_screenX = (canvas.width - loose_screenW) / 2;
+        //   const loose_screenY = (canvas.height - loose_screenH) / 2;
+        //   ctx.drawImage(loadedAssets["assets/loose_screen.png"], loose_screenX, loose_screenY, loose_screenW, loose_screenH);
+
+        //   play_again_scale = canvas.width / loadedAssets["assets/play_again_button.png"].width;
+        //   play_againW = loadedAssets["assets/play_again_button.png"].width * play_again_scale * 0.35;
+        //   play_againH = loadedAssets["assets/play_again_button.png"].height * play_again_scale * 0.35;
+        //   play_againX = (canvas.width - play_againW) / 8;
+        //   play_againY = (canvas.height - play_againH) / 1.71;
+          
+        //   ctx.drawImage(loadedAssets["assets/play_again_button.png"], play_againX, play_againY, play_againW, play_againH);
+        //   // ctx.fillRect(play_againX, play_againY, play_againW, play_againH);
+
+        //   button_close_scale = canvas.width / loadedAssets["assets/button_close.png"].width; 
+        //   button_closeW = loadedAssets["assets/button_close.png"].width * button_close_scale * 0.35;
+        //   button_closeH = loadedAssets["assets/button_close.png"].height * button_close_scale * 0.35;
+        //   button_closeX = (canvas.width - button_closeW) / 1.2;
+        //   button_closeY = (canvas.height - button_closeH) / 1.71;
+          
+        //   ctx.drawImage(loadedAssets["assets/button_close.png"], button_closeX, button_closeY, button_closeW, button_closeH);
+        //   // ctx.fillRect(button_closeX, button_closeY, button_closeW, button_closeH);
+
+        //   visit_brand_scale = canvas.width / loadedAssets["assets/button_visit_ajio.png"].width;
+        //   visit_brandW = loadedAssets["assets/button_visit_ajio.png"].width * visit_brand_scale * 0.35;
+        //   visit_brandH = loadedAssets["assets/button_visit_ajio.png"].height * visit_brand_scale * 0.35;
+        //   visit_brandX = (canvas.width - visit_brandW) / 2;
+        //   visit_brandY = (canvas.height - visit_brandH) / 1.5;
+          
+        //   ctx.drawImage(loadedAssets["assets/button_visit_ajio.png"], visit_brandX, visit_brandY, visit_brandW, visit_brandH);
           break;
         default:
           break;
@@ -496,9 +576,25 @@ function drawScene() {
   }
 }
 
+
 canvas.addEventListener("click", (e) => {
 
-  switch (SCREEN) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+
+  if (
+  mouseX >= hud_crossX &&
+  mouseX <= hud_crossX + hud_crossW &&
+  mouseY >= hud_crossY &&
+  mouseY <= hud_crossY + hud_crossY
+){
+  console.log("Clicked on cross button");
+  window.close();
+  return;
+}
+switch (SCREEN) {
     case SCREEN_TITLE:
       playBGMusic();
       setScreen(SCREEN_GAME);
@@ -524,9 +620,6 @@ canvas.addEventListener("click", (e) => {
           button_state = BUTTON_STATE_NONE;
           break;
         case gameStates.START:
-          const rect = canvas.getBoundingClientRect();
-          const mouseX = e.clientX - rect.left;
-          const mouseY = e.clientY - rect.top;
 
           playSFX(sfxWindow);
           for (let r = 0; r < GRID_ROWS; r++) {
@@ -561,26 +654,40 @@ canvas.addEventListener("click", (e) => {
           }
           break;
         case gameStates.WIN:
-          playerLives = 3;
-          headCount = 0;
-          setupGrid();
-          setInGameState(gameStates.ALL_WINDOW_OPEN);
-          break;
         case gameStates.LOOSE:
-          playerLives = 3;
-          headCount = 0;
-          setupGrid();
-          setInGameState(gameStates.ALL_WINDOW_OPEN);
+            if (mouseX >= play_againX && mouseX <= play_againX + play_againW && mouseY >= play_againY && mouseY <= play_againY + play_againW){
+              playerLives = 3;
+              headCount = 0;
+              setupGrid();
+              setInGameState(gameStates.ALL_WINDOW_OPEN);
+              return;
+            }
+
+            if (mouseX >= button_closeX && mouseX <= button_closeX + button_closeW && mouseY >= button_closeY && mouseY <= button_closeY + button_closeH){
+              window.close();
+              return;
+            }
+
+            if (mouseX >= visit_brandX && mouseX <= visit_brandX + visit_brandW && mouseY >= visit_brandY && mouseY <= visit_brandY + visit_brandH){
+              window.open("https://www.ajio.com", "_blank");
+              return;
+            }
           break;
+        // case gameStates.LOOSE:
+        //   playerLives = 3;
+        //   headCount = 0;
+        //   setupGrid();
+        //   setInGameState(gameStates.ALL_WINDOW_OPEN);
+        //   break;
         default:
           break;
       }
+
       break;
     case SCREEN_WIN:
-      playerLives = 3;
-      headCount = 0;
-      setupGrid();
-      setInGameState(gameStates.ALL_WINDOW_OPEN);
+      
+
+
 
       break;
     case SCREEN_LOOSE:
@@ -763,6 +870,7 @@ function animateBlast(cell) {
     }, 10);
   } else {
     playerLives--;
+    // playerLives -= 3;
     button_state = BUTTON_STATE_NONE;
     console.log("ButtonState 3333 ", button_state);
     playSFX(sfxWrongAnswer);
