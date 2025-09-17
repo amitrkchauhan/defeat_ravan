@@ -1103,3 +1103,9 @@ document.addEventListener('visibilitychange', function() {
     playBGMusic();
   }
 });
+
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock("portrait").catch(err => {
+    console.log("Orientation lock not supported:", err);
+  });
+}
