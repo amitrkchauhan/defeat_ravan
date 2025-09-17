@@ -140,7 +140,7 @@ const assetPaths = [
   "assets/button_visit_ajio.png",
   "assets/button_close.png",
   ...Array.from({ length: 10 }, (_, i) => `assets/D${i + 1}.png`),
-  ...Array.from({ length: 10 }, (_, i) => `assets/offer${i + 1}.png`)
+  ...Array.from({ length: 1 }, (_, i) => `assets/offer1.png`)
 ];
 
 
@@ -183,15 +183,28 @@ function setupFrames() {
 let grid = [];
 let cellSize, offsetX, offsetY;
 const devilData = [];
+const devilOfferData = [];
+
 
 function setupGrid() {
   devilData.length = 0;
   for (let i = 1; i <= 10; i++) {
-    devilData.push({
-      devilImg: loadedAssets[`assets/D${i}.png`],
-      offerImg: loadedAssets[`assets/offer${i}.png`],
-      offerLink: `https://www.ajio.com`
-    });
+      devilData.push({
+        devilImg: loadedAssets[`assets/D${i}.png`]
+        // offerImg: loadedAssets[`assets/offer.png`],
+        // offerLink: `https://www.ajio.com`
+      });
+    }
+    setupOffer();
+  }
+
+  function setupOffer() {
+    devilOfferData.length = 0;
+    for (let i = 1; i <= 1; i++) {
+      devilOfferData.push({
+        offerImg: loadedAssets[`assets/offer1.png`],
+        offerLink: `https://www.ajio.com`
+      });
   }
 
   const shuffled = [...devilData].sort(() => Math.random() - 0.5);
@@ -409,12 +422,12 @@ function drawScene() {
 
       // const hud_cross_scale = canvas.width / loadedAssets["assets/hud_cross.png"].width;
 
-      hud_crossW = loadedAssets["assets/hud_cross.png"].width * 0.45;
-      hud_crossH = loadedAssets["assets/hud_cross.png"].height * 0.45;
-      hud_crossX = canvas.width - hud_crossW * 1.5;
-      hud_crossY = (hud_crossH + hud_bgH) / 2.5;
+      // hud_crossW = loadedAssets["assets/hud_cross.png"].width * 0.45;
+      // hud_crossH = loadedAssets["assets/hud_cross.png"].height * 0.45;
+      // hud_crossX = canvas.width - hud_crossW * 1.5;
+      // hud_crossY = (hud_crossH + hud_bgH) / 2.5;
       
-      ctx.drawImage(loadedAssets["assets/hud_cross.png"], hud_crossX, hud_crossY, hud_crossW, hud_crossH);
+      // ctx.drawImage(loadedAssets["assets/hud_cross.png"], hud_crossX, hud_crossY, hud_crossW, hud_crossH);
 
 
       drawLives(playerLives);
@@ -512,11 +525,11 @@ function drawScene() {
           ctx.drawImage(loadedAssets["assets/play_again_button.png"], play_againX, play_againY, play_againW, play_againH);
           // ctx.fillRect(play_againX, play_againY, play_againW, play_againH);
 
-          button_close_scale = canvas.width / loadedAssets["assets/button_close.png"].width; 
-          button_closeW = loadedAssets["assets/button_close.png"].width * button_close_scale * 0.35;
-          button_closeH = loadedAssets["assets/button_close.png"].height * button_close_scale * 0.35;
-          button_closeX = (canvas.width - button_closeW) / 1.2;
-          button_closeY = (canvas.height - button_closeH) / 1.71;
+          // button_close_scale = canvas.width / loadedAssets["assets/button_close.png"].width; 
+          // button_closeW = loadedAssets["assets/button_close.png"].width * button_close_scale * 0.35;
+          // button_closeH = loadedAssets["assets/button_close.png"].height * button_close_scale * 0.35;
+          // button_closeX = (canvas.width - button_closeW) / 1.2;
+          // button_closeY = (canvas.height - button_closeH) / 1.71;
           
           ctx.drawImage(loadedAssets["assets/button_close.png"], button_closeX, button_closeY, button_closeW, button_closeH);
           // ctx.fillRect(button_closeX, button_closeY, button_closeW, button_closeH);
@@ -524,8 +537,11 @@ function drawScene() {
           visit_brand_scale = canvas.width / loadedAssets["assets/button_visit_ajio.png"].width;
           visit_brandW = loadedAssets["assets/button_visit_ajio.png"].width * visit_brand_scale * 0.35;
           visit_brandH = loadedAssets["assets/button_visit_ajio.png"].height * visit_brand_scale * 0.35;
-          visit_brandX = (canvas.width - visit_brandW) / 2;
-          visit_brandY = (canvas.height - visit_brandH) / 1.5;
+          visit_brandX = (canvas.width - visit_brandW) / 1.2;
+          visit_brandY = (canvas.height - visit_brandH) / 1.71;
+
+          // visit_brandX = (canvas.width - visit_brandW) / 2;
+          // visit_brandY = (canvas.height - visit_brandH) / 1.5;
           
           ctx.drawImage(loadedAssets["assets/button_visit_ajio.png"], visit_brandX, visit_brandY, visit_brandW, visit_brandH);
 
@@ -584,16 +600,16 @@ canvas.addEventListener("click", (e) => {
   const mouseY = e.clientY - rect.top;
 
 
-  if (
-  mouseX >= hud_crossX &&
-  mouseX <= hud_crossX + hud_crossW &&
-  mouseY >= hud_crossY &&
-  mouseY <= hud_crossY + hud_crossY
-){
-  console.log("Clicked on cross button");
-  window.close();
-  return;
-}
+//   if (
+//   mouseX >= hud_crossX &&
+//   mouseX <= hud_crossX + hud_crossW &&
+//   mouseY >= hud_crossY &&
+//   mouseY <= hud_crossY + hud_crossY
+// ){
+//   console.log("Clicked on cross button");
+//   window.close();
+//   return;
+// }
 switch (SCREEN) {
     case SCREEN_TITLE:
       playBGMusic();
@@ -663,10 +679,10 @@ switch (SCREEN) {
               return;
             }
 
-            if (mouseX >= button_closeX && mouseX <= button_closeX + button_closeW && mouseY >= button_closeY && mouseY <= button_closeY + button_closeH){
-              window.close();
-              return;
-            }
+            // if (mouseX >= button_closeX && mouseX <= button_closeX + button_closeW && mouseY >= button_closeY && mouseY <= button_closeY + button_closeH){
+            //   window.close();
+            //   return;
+            // }
 
             if (mouseX >= visit_brandX && mouseX <= visit_brandX + visit_brandW && mouseY >= visit_brandY && mouseY <= visit_brandY + visit_brandH){
               window.open("https://www.ajio.com", "_blank");
@@ -858,12 +874,13 @@ function animateBlast(cell) {
           console.log("ButtonState 2222 ", button_state);
           headCount++;
           if (headCount >= TOTAL_HEADS) {
+            showOfferPopup(cell.devil);
             setTimeout(() => {
               setInGameState(gameStates.WIN);
               playBGMusic();
             }, 1000);
           }
-          showOfferPopup(cell.devil);
+          // showOfferPopup(cell.devil);
 
         }
       }, 75);
@@ -893,9 +910,13 @@ const offerLink = document.getElementById("offerLink");
 const closeOffer = document.getElementById("closeOffer");
 
 function showOfferPopup(devil) {
-  offerImage.src = devil.offerImg.src;
-  offerLink.href = devil.offerLink;
+
+    offerImage.src = loadedAssets["assets/offer1.png"].src;
+  offerLink.href = `https://www.ajio.com/s/50to90percentoff-140961`;
   offerPopup.style.display = "flex";
+  // offerImage.src = devil.offerImg.src;
+  // offerLink.href = devil.offerLink;
+  // offerPopup.style.display = "flex";
 }
 
 closeOffer.addEventListener("click", () => {
@@ -1038,7 +1059,7 @@ function drawLives(lives) {
 
   // Draw hearts aligned at top-left corner
   // const startX = 20; 
-  const startX = (canvas.width - (3 * (heartW + margin))) / 1.9;
+  const startX = (canvas.width - (3 * (heartW + margin))) / 1.0;
   const startY = heartH * 1;
 
   for (let i = 0; i < 3; i++) {
